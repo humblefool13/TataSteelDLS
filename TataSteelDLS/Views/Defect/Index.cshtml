@@ -294,7 +294,16 @@
                 <option value="1" selected>1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
-            <option value="10">10</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6">6</option>
+                <option value="7">7</option>
+                <option value="8">8</option>
+                <option value="9">9</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
             </select>
         </label>
         <button class="btn" onclick="showDefectImage()">Show Defect</button>
@@ -307,7 +316,7 @@
     </div>
 
     <div class="header"></div>
-
+@* 
 <h5>Select Defect</h5>
 <div id="defectSelector" style="margin-top: 10px; padding: 12px; background: #f0f8ff; border-radius: 8px; border: 1px solid #ccc; max-width: 700px;">
 
@@ -339,7 +348,7 @@
     <p style="margin-top: 8px; font-size: 13px; color: #555;">
         Select a cell on the grid, choose the defect type and severity, then click "Apply Defect".
     </p>
-</div>
+</div> *@
 
 
         @* <div class="defect-records">
@@ -439,7 +448,8 @@
         function initializeGrid() {
             const container = document.getElementById('gridContainer');
             const coilWidth = 1175;
-            const coilHeight = 235;
+            const coilHeight = Math.ceil(coilWidth/5);
+            const labels = [0, coilHeight, coilHeight*2, coilHeight*3, coilHeight*4, coilHeight*5].reverse();
             const cellWidth = 40;
             const cellHeight = 47;
 
@@ -456,30 +466,35 @@
 
             html += '<div class="grid-content">';
 
-            for (let y = coilWidth; y >= 0; y -= coilHeight) {
+            for (let y = 0; y < 5; y++) {
                 html += '<div class="grid-row" style="display: flex;">';
-
-                html += `
-                    <div class="ruler-cell-y"
-                         style="width: 60px; height: ${cellHeight}px; position: sticky; left: 0;
-                                background-color: #f8f9fa; z-index: 9; display: flex;
-                                align-items: flex-start; justify-content: center;
-                                font-weight: bold; font-size: 14px; padding-top: 4px;">
-                        ${y}
+                // Ruler for Y-axis
+                html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
+                        background-color: #f8f9fa; z-index: 12; display: flex;
+                        align-items: flex-start; justify-content: flex-end; padding-right: 5px;
+                        font-weight: bold; font-size: 14px; margin-top: -8px;">
+                        ${labels[y]}
                     </div>`;
-
                 for (let x = 0; x < 30; x++) {
                     html += `<div class="grid-cell"
-                                 data-x="${currentPosition + x}"
-                                 data-y="${y}"
+                                 data-x="${currentPosition + (x * cellSize)}"
+                                 data-y="${labels[y]}"
                                  style="width: ${cellWidth}px; height: ${cellHeight}px;
                                         border: 1px solid #ccc; background-color: white;">
-                             </div>`;
+                          </div>`;
                 }
-
                 html += '</div>';
             }
-
+            html += '<div class="grid-row" style="display: flex;">';
+                // Ruler for Y-axis
+            html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
+                        background-color: #f8f9fa; z-index: 12; display: flex;
+                        align-items: flex-start; justify-content: flex-end; padding-right: 5px;
+                        font-weight: bold; font-size: 14px; margin-top: -8px;">
+                        ${labels[5]}
+                    </div>`;
+                
+            html += '</div>';
             html += '</div>';
             container.innerHTML = html;
 
