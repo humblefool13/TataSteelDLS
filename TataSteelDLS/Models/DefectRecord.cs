@@ -34,7 +34,6 @@ namespace DefectLoggingApp.Models
 
         public string? MotherCoil { get; set; }
         public string? DaughterCoil { get; set; }
-        public string? Position { get; set; }
         public string? Remarks { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.Now;
     }
