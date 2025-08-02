@@ -261,11 +261,118 @@
             margin: 10px 0;
         }
 
-            .search-box input {
-                padding: 5px;
-                border: 1px solid #ccc;
-                width: 200px;
-            }
+        .search-box input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            width: 200px;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            right: 0; bottom: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 999;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            min-width: 340px;
+            max-width: 420px;
+            max-height: 55vh;
+            width: 90vw;
+            background: #fff;
+            border-radius: 10px;
+            border: 2px solid #4472C4;
+            box-shadow: 0 8px 32px rgba(44, 62, 80, 0.18);
+            padding: 24px 28px 18px 28px;
+            z-index: 1000;
+            position: relative;
+            animation: modalFadeIn 0.25s cubic-bezier(.4,0,.2,1);
+        }
+
+        .modal h3 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            color: #4472C4;
+            font-size: 1.25rem;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .modal label {
+            font-weight: 500;
+            color: #365a96;
+            margin-bottom: 3px;
+            display: block;
+        }
+
+        .modal select,
+        .modal textarea {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+            background: #f8f9fa;
+            transition: border-color 0.2s;
+        }
+
+        .modal select:focus,
+        .modal textarea:focus {
+            border-color: #4472C4;
+            outline: none;
+        }
+
+        .modal button[type="submit"],
+        .modal button[type="button"] {
+            margin-top: 8px;
+            margin-right: 8px;
+            min-width: 90px;
+        }
+
+        .modal button[type="submit"] {
+            background-color: #4472C4;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 7px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal button[type="submit"]:hover {
+            background-color: #365a96;
+        }
+
+        .modal button[type="button"] {
+            background: #f0f0f0;
+            color: #365a96;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 7px 16px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .modal button[type="button"]:hover {
+            background: #e3f2fd;
+            color: #4472C4;
+        }
     </style>
 
 
@@ -314,59 +421,64 @@
     </div>
 
     <div class="header"></div>
-@* 
-<h5>Select Defect</h5>
-<div id="defectSelector" style="margin-top: 10px; padding: 12px; background: #f0f8ff; border-radius: 8px; border: 1px solid #ccc; max-width: 700px;">
 
-    <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-        <!-- Defect Type Dropdown -->
-        <label for="defectType" style="font-weight: bold;">Defect Type:</label>
-        <select id="defectType" class="form-control">
-            @foreach (var defect in Model.DefectTypes)
-            {
-                <option value="@defect.Code">@defect.Name</option>
-            }
-        </select>
+    <div class="defect-records">
+        <div class="defect-records-header">
+            <div class="defect-record-cell">Log ID</div>
+            <div class="defect-record-cell">St Wd</div>
+            <div class="defect-record-cell">End Wd</div>
+            <div class="defect-record-cell">St Ln</div>
+            <div class="defect-record-cell">End Ln</div>
+            <div class="defect-record-cell">Tot Ln</div>
+            <div class="defect-record-cell">Type</div>
+            <div class="defect-record-cell">Defect Name</div>
+            <div class="defect-record-cell">Severity</div>
+            <div class="defect-record-cell">Defect Image</div>
+            <div class="defect-record-cell">Mother Coil</div>
+            <div class="defect-record-cell">Daughter Coil</div>
+            <div class="defect-record-cell">Remarks</div>
+            <div class="defect-record-cell">Timestamp</div>
+        </div>
+        <div id="defectRecordsList">
 
-        <!-- Severity Dropdown -->
-        <label for="defectSeverity" style="font-weight: bold;">Severity:</label>
-        <select id="defectSeverity" class="form-control">
-            @for (int i = 1; i <= 5; i++)
-            {
-                <option value="@i">@i</option>
-            }
-        </select>
+        </div>
+    </div> 
 
-        <!-- Confirm Button -->
-        <button id="applyDefectBtn" class="btn btn-primary" style="padding: 5px 12px;">
-            Apply Defect
-        </button>
+    <div id="selectedCellsPopup" class="modal-overlay">
+        <div class="modal">
+            <h3>Add Defect</h3>
+            <div>
+                <p>
+                    <strong>Length Range:</strong> <span id="xRange"></span><br />
+                    <strong>Width Range:</strong> <span id="yRange"></span>
+                </p>
+                <form id="defectForm">
+                    <label for="defectType">Defect Type:</label>
+                    <select id="defectType" name="defectType" required>
+                        <option value="">Select...</option>
+                        @foreach (var defect in @Model.DefectTypes)
+                        {
+                            <option value="@defect.Code">@defect.Name</option>
+                        }
+                    </select>
+                    <br /><br />
+                    <label for="defectSeverity">Severity:</label>
+                    <select id="defectSeverity" name="defectSeverity" required>
+                        <option value="">Select...</option>
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <option value="@i">@i</option>
+                        }
+                    </select>
+                    <br /><br />
+                    <label for="remarks">Remarks:</label>
+                    <textarea id="remarks" name="remarks" rows="3" placeholder="Enter your remarks"></textarea>
+                    <button type="submit">Add Defect</button>
+                    <button type="button" onclick="closePopup()">Cancel</button>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <p style="margin-top: 8px; font-size: 13px; color: #555;">
-        Select a cell on the grid, choose the defect type and severity, then click "Apply Defect".
-    </p>
-</div> *@
-
-
-        @*  <div class="defect-records">
-            <div class="defect-records-header">
-                <div class="defect-record-cell">Pr.Line</div>
-                <div class="defect-record-cell">Surface</div>
-                <div class="defect-record-cell">St Wd</div>
-                <div class="defect-record-cell">End Wd</div>
-                <div class="defect-record-cell">St Ln</div>
-                <div class="defect-record-cell">End Ln</div>
-                <div class="defect-record-cell">Tot Ln</div>
-                <div class="defect-record-cell">Type</div>
-                <div class="defect-record-cell">Defect Name</div>
-                <div class="defect-record-cell">Severity</div>
-                <div class="defect-record-cell">Defect Image</div>
-            </div>
-            <div id="defectRecordsList">
-                @Html.Partial("_DefectList", Model.DefectRecords)
-            </div>
-        </div>  *@
     
 
     <div class="color-legend" id="colorLegend">
@@ -404,102 +516,83 @@
     @section Scripts {
         <script>
             let currentPosition = 0;
-            let cellSize = 1;
+            let cellSize = @Model.CellSize;
             let started = false;
-            // let selectedSeverity = 1;
-            // let selectedDefectType = 'SCAB';
             let isSelecting = false;
+            let selectedSeverity = null;
+            let selectedDefectType = null;
             let selectionStart = null;
-            // let selectionEnd = null;
-            // let selectedCells = [];
+            let selectionEnd = null;
             let isSingleRow = null;
 
             document.addEventListener('DOMContentLoaded', function() {
                 initializeGrid();
                 toggleColorLegend();
                 setupEventListeners();
-                // loadDefects();
+                loadDefects();
             });
 
             function setupEventListeners() {
-            //     Severity selection
-            //     document.querySelectorAll('.severity-btn').forEach(btn => {
-            //         btn.addEventListener('click', function() {
-            //             document.querySelectorAll('.severity-btn').forEach(b => b.classList.remove('selected'));
-            //             this.classList.add('selected');
-            //             selectedSeverity = parseInt(this.dataset.severity);
-            //         });
-            //     });
-
-            //     Defect type selection
-            //     document.querySelectorAll('.defect-type-row').forEach(row => {
-            //         row.addEventListener('click', function() {
-            //             document.querySelectorAll('.defect-type-row').forEach(r => r.classList.remove('selected'));
-            //             this.classList.add('selected');
-            //             selectedDefectType = this.dataset.defectType;
-            //         });
-            //     });
-
-            //     Grid mouse events
-                document.getElementById('gridContainer').addEventListener('mousedown', startSelection);
+                document.getElementById('gridContainer').addEventListener('mousedown', mouseClick);
                 document.getElementById('gridContainer').addEventListener('mousemove', updateSelection);
-            //     document.addEventListener('mouseup', endSelection);
+                document.addEventListener('contextmenu', function (event) {
+                    event.preventDefault();
+                });
             }
 
-        function initializeGrid() {
-            const container = document.getElementById('gridContainer');
-            const coilWidth = 1175;
-            const coilHeight = Math.ceil(coilWidth/5);
-            const labels = [0, coilHeight, coilHeight*2, coilHeight*3, coilHeight*4, coilHeight*5].reverse();
-            const cellWidth = 40;
-            const cellHeight = 47;
+            function initializeGrid() {
+                const container = document.getElementById('gridContainer');
+                const coilWidth = @Model.CoilData.Width;
+                const coilHeight = Math.ceil(coilWidth/5);
+                const labels = [0, coilHeight, coilHeight*2, coilHeight*3, coilHeight*4, coilHeight*5].reverse();
+                const cellWidth = 40;
+                const cellHeight = 47;
 
-            container.style.maxHeight = 'none'; // remove scroll limit
-            container.style.overflow = 'hidden'; // disable scrollbars
+                container.style.maxHeight = 'none'; // remove scroll limit
+                container.style.overflow = 'hidden'; // disable scrollbars
 
-            let html = '<div class="grid-ruler-x">';
-            html += '<div class="ruler-cell" style="width: 60px; position: sticky; left: 0; background-color: #f8f9fa; z-index: 11;"></div>';
+                let html = '<div class="grid-ruler-x">';
+                html += '<div class="ruler-cell" style="width: 60px; position: sticky; left: 0; background-color: #f8f9fa; z-index: 11;"></div>';
 
-            for (let i = 0; i < 30; i++) {
-                html += `<div class="ruler-cell" style="width: ${cellWidth}px;">${currentPosition + (i*cellSize)}</div>`;
-            }
-            html += '</div>';
-
-            html += '<div class="grid-content">';
-
-            for (let y = 0; y < 5; y++) {
-                html += '<div class="grid-row" style="display: flex;">';
-                // Ruler for Y-axis
-                html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
-                        background-color: #f8f9fa; z-index: 12; display: flex;
-                        align-items: flex-start; justify-content: flex-end; padding-right: 5px;
-                        font-weight: bold; font-size: 14px; margin-top: -8px;">
-                        ${labels[y]}
-                    </div>`;
-                for (let x = 0; x < 30; x++) {
-                    html += `<div class="grid-cell"
-                                 data-x="${currentPosition + (x * cellSize)}"
-                                 data-y="${labels[y]}"
-                                 style="width: ${cellWidth}px; height: ${cellHeight}px;
-                                        border: 1px solid #ccc; background-color: white;">
-                          </div>`;
+                for (let i = 0; i < 30; i++) {
+                    html += `<div class="ruler-cell" style="width: ${cellWidth}px;">${currentPosition + (i*cellSize)}</div>`;
                 }
                 html += '</div>';
+
+                html += '<div class="grid-content">';
+
+                for (let y = 0; y < 5; y++) {
+                    html += '<div class="grid-row" style="display: flex;">';
+                    // Ruler for Y-axis
+                    html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
+                            background-color: #f8f9fa; z-index: 12; display: flex;
+                            align-items: flex-start; justify-content: flex-end; padding-right: 5px;
+                            font-weight: bold; font-size: 14px; margin-top: -8px;">
+                            ${labels[y]}
+                        </div>`;
+                    for (let x = 0; x < 30; x++) {
+                        html += `<div class="grid-cell"
+                                     data-x="${currentPosition + (x * cellSize)}"
+                                     data-y="${labels[y]}"
+                                     style="width: ${cellWidth}px; height: ${cellHeight}px;
+                                            border: 1px solid #ccc; background-color: white;">
+                              </div>`;
+                    }
+                    html += '</div>';
+                }
+                html += '<div class="grid-row" style="display: flex;">';
+                    // Ruler for Y-axis
+                html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
+                            background-color: #f8f9fa; z-index: 12; display: flex;
+                            align-items: flex-start; justify-content: flex-end; padding-right: 5px;
+                            font-weight: bold; font-size: 14px; margin-top: -8px;">
+                            ${labels[5]}
+                        </div>`;
+                html += '</div>';
+                html += '</div>';
+                container.innerHTML = html;
+                updateGridColors();
             }
-            html += '<div class="grid-row" style="display: flex;">';
-                // Ruler for Y-axis
-            html += `<div class="ruler-cell-y" style="width: 60px; height: ${coilHeight}px; position: sticky; left: 0;
-                        background-color: #f8f9fa; z-index: 12; display: flex;
-                        align-items: flex-start; justify-content: flex-end; padding-right: 5px;
-                        font-weight: bold; font-size: 14px; margin-top: -8px;">
-                        ${labels[5]}
-                    </div>`;
-                
-            html += '</div>';
-            html += '</div>';
-            container.innerHTML = html;
-            updateGridColors();
-        }
 
 
             function updateGridColors() {
@@ -515,7 +608,8 @@
                     });
             }
 
-            function startSelection(event) {
+            function mouseClick(event) {
+                event.preventDefault();
                 if (!started) return;
                 if (event.button == 0) {
                     if (event.target.classList.contains('grid-cell')) {
@@ -528,41 +622,44 @@
                     }
                     event.target.classList.add('selecting');
                 } else if (event.button == 2) {
-                    // isSelecting = false;
-                    // selectionStart = null;
-                    // selectionEnd = null;
-                    // clearSelection();
+                    if (!started || !isSelecting) return;
+                    started = false;
+                    isSelecting = false;
+                    const coilWidth = @Model.CoilData.Width;
+                    const cellHeight = Math.ceil(coilWidth/5)
+                    if (selectionStart && selectionEnd) {
+                        const selection = {
+                            StartX: Math.min(selectionStart.x, selectionEnd.x),
+                            EndX: Math.max(selectionStart.x, selectionEnd.x),
+                            StartY: Math.min(selectionStart.y, selectionEnd.y) - cellHeight,
+                            EndY: Math.max(selectionStart.y, selectionEnd.y),
+                        };
+                        showSelected(selection);
+                        showPopup(selection);
+                    }
+                   
                 };
                 
             }
 
             function updateSelection(event) {
+                const coilWidth = @Model.CoilData.Width;
+                const cellHeight = Math.ceil(coilWidth/5)
                 if (!started) return;
                 if (isSelecting && event.target.classList.contains('grid-cell')) {
-                    selectionEnd = {
-                        x: parseInt(event.target.dataset.x),
-                        y: parseInt(event.target.dataset.y)
+                    if (!isSingleRow) {
+                        selectionEnd = {
+                            x: parseInt(event.target.dataset.x),
+                            y: parseInt(event.target.dataset.y)
+                        };
+                    } else {
+                        selectionEnd = {
+                            x: parseInt(event.target.dataset.x),
+                            y: selectionStart.y
+                        };
                     };
                     highlightSelection();
                 }
-            }
-
-            function endSelection(event) {
-                // if (isSelecting && selectionStart && selectionEnd) {
-                //     isSelecting = false;
-
-                //     const selection = {
-                //         StartX: Math.min(selectionStart.x, selectionEnd.x),
-                //         EndX: Math.max(selectionStart.x, selectionEnd.x),
-                //         StartY: Math.min(selectionStart.y, selectionEnd.y),
-                //         EndY: Math.max(selectionStart.y, selectionEnd.y),
-                //         DefectType: selectedDefectType,
-                //         Severity: selectedSeverity
-                //     };
-
-                //     addDefect(selection);
-                //     clearSelection();
-                // }
             }
 
             function highlightSelection() {
@@ -591,94 +688,163 @@
                 }
             }
 
+            function showSelected(selection) {  
+                const coilWidth = @Model.CoilData.Width;
+                const cellHeight = Math.ceil(coilWidth/5)
+                for (let x = selection.StartX; x <= selection.EndX; x++) {
+                    if(isSingleRow) {
+                     const cell = document.querySelector(`[data-x="${x}"][data-y="${selection.StartY+cellHeight}"]`);
+                         if (cell) {
+                            cell.classList.add('selected');
+                            cell.classList.remove('selecting');
+                         }
+                    } else {
+                        for (let y = selection.StartY+cellHeight; y <= selection.EndY; y++) {
+                            const cell = document.querySelector(`[data-x="${x}"][data-y="${y}"]`);
+                            if (cell) {
+                                cell.classList.add('selected');
+                                cell.classList.remove('selecting');
+                            }
+                        }
+                    }
+                }
+            }
+
             function clearSelection() {
                 document.querySelectorAll('.grid-cell').forEach(cell => {
                     cell.classList.remove('selecting', 'selected');
                 });
             }
 
-            // function addDefect(selection) {
-            //     fetch('/Defect/AddDefect', {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //         },
-            //         body: JSON.stringify(selection)
-            //     })
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         if (data.success) {
-            //             loadDefects();
-            //             updateGridColors();
-            //         } else {
-            //             alert('Error adding defect: ' + data.error);
-            //         }
-            //     });
-            // }
+            function showPopup(selection) {
+                document.getElementById('xRange').textContent = `${selection.StartX} to ${selection.EndX}`;
+                document.getElementById('yRange').textContent = `${selection.StartY} to ${selection.EndY}`;
+                const popupElement = document.getElementById('selectedCellsPopup');
+                popupElement.classList.add('active');
+            }
 
-            // function loadDefects() {
-            //     fetch('/Defect/GetDefects')
-            //         .then(response => response.json())
-            //         .then(data => {
-            //             updateDefectList(data);
-            //         });
-            // }
+            function closePopup(endIt=true) {
+                document.getElementById('defectForm').reset();
+                document.getElementById('selectedCellsPopup').classList.remove('active');
+                if(endIt) end();
+            }
 
-            // function updateDefectList(defects) {
-            //     const container = document.getElementById('defectRecordsList');
-            //     let html = '';
+            document.getElementById('defectForm').onsubmit = function(e) {
+                e.preventDefault();
+                const defectType = document.getElementById('defectType').value;
+                const defectSeverity = document.getElementById('defectSeverity').value;
+                const remarks = document.getElementById('remarks').value || '';
+                const stringX = document.getElementById('xRange').textContent;
+                const [startX, endX] = stringX.replace(" to ",",").split(",");
+                const stringY = document.getElementById('yRange').textContent;
+                const [startY, endY] = stringY.replace(" to ",",").split(",");
+                let selection = {
+                    StartX: startX,
+                    EndX: endX,
+                    StartY: startY,
+                    EndY: endY
+                };
+                const timestamp = new Date().toISOString();
+                if (selection && defectType && defectSeverity) {
+                    addDefect(selection, defectType, defectSeverity, timestamp, remarks);
+                }
+                closePopup();
+            };
 
-            //     defects.forEach(defect => {
-            //         html += `
-            //             <div class="defect-record-row" data-defect-id="${defect.id}">
-            //                 <div class="defect-record-cell">${defect.prLine}</div>
-            //                 <div class="defect-record-cell">${defect.surface}</div>
-            //                 <div class="defect-record-cell">${defect.startWidth}</div>
-            //                 <div class="defect-record-cell">${defect.endWidth}</div>
-            //                 <div class="defect-record-cell">${defect.startLength}</div>
-            //                 <div class="defect-record-cell">${defect.endLength}</div>
-            //                 <div class="defect-record-cell">${defect.totalLength}</div>
-            //                 <div class="defect-record-cell">${defect.type}</div>
-            //                 <div class="defect-record-cell">${defect.defectName}</div>
-            //                 <div class="defect-record-cell">${defect.severity}</div>
-            //                 <div class="defect-record-cell">🖼️</div>
-            //             </div>`;
-            //     });
+            function addDefect(selection, DefectType, Severity, timestamp, remarks) {
+                const defectData = {
+                    StartX: parseInt(selection.StartX),
+                    EndX: parseInt(selection.EndX),
+                    StartY: parseInt(selection.StartY),
+                    EndY: parseInt(selection.EndY),
+                    DefectType,
+                    Severity: parseInt(Severity),
+                    timestamp,
+                    remarks
+                };
+                fetch('/Defect/AddDefect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(defectData)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadDefects();
+                        updateGridColors();
+                    } else {
+                        alert('Error adding defect: ' + data.error);
+                    }
+                });
+            }
 
-            //     container.innerHTML = html;
+            function loadDefects() {
+                fetch('/Defect/GetDefects')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateDefectList(data);
+                    });
+            }
 
-            //     Add click event listeners for defect deletion
-            //     document.querySelectorAll('.defect-record-row').forEach(row => {
-            //         row.addEventListener('dblclick', function() {
-            //             const defectId = parseInt(this.dataset.defectId);
-            //             if (confirm('Are you sure you want to delete this defect?')) {
-            //                 deleteDefect(defectId);
-            //             }
-            //         });
-            //     });
-            // }
+            function updateDefectList(defects) {
+                const container = document.getElementById('defectRecordsList');
+                let html = '';
 
-            // function deleteDefect(id) {
-            //     fetch('/Defect/DeleteDefect', {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //         },
-            //         body: JSON.stringify(id)
-            //     })
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         if (data.success) {
-            //             loadDefects();
-            //             updateGridColors();
-            //         } else {
-            //             alert('Error deleting defect: ' + data.error);
-            //         }
-            //     });
-            // }
+                defects.forEach(defect => {
+                    html += `
+                        <div class="defect-record-row" data-defect-id="${defect.Id}">
+                            <div class="defect-record-cell">${defect.Id}</div>  
+                            <div class="defect-record-cell">${defect.StartWidth}</div>
+                            <div class="defect-record-cell">${defect.EndWidth}</div>
+                            <div class="defect-record-cell">${defect.StartLength}</div>
+                            <div class="defect-record-cell">${defect.EndLength}</div>
+                            <div class="defect-record-cell">${defect.TotalLength}</div>
+                            <div class="defect-record-cell">${defect.Type}</div>
+                            <div class="defect-record-cell">${defect.DefectName}</div>
+                            <div class="defect-record-cell">${defect.Severity}</div>
+                            <div class="defect-record-cell">${defect.DefectImage||'No Data'}</div>
+                            <div class="defect-record-cell">${defect.MotherCoil||'No Data'}</div>
+                            <div class="defect-record-cell">${defect.DaughterCoil || 'No Data'}</div>
+                            <div class="defect-record-cell">${defect.Remarks || 'None'}</div>
+                            <div class="defect-record-cell">${defect.Timestamp}</div>
+                        </div>`;
+                });
+
+                container.innerHTML = html;
+
+                document.querySelectorAll('.defect-record-row').forEach(row => {
+                    row.addEventListener('dblclick', function() {
+                        const defectId = parseInt(this.dataset.defectId);
+                        if (confirm('Are you sure you want to delete this defect?')) {
+                            deleteDefect(defectId);
+                        }
+                    });
+                });
+            }
+
+            function deleteDefect(id) {
+                fetch('/Defect/DeleteDefect', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(id)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        loadDefects();
+                        updateGridColors();
+                    } else {
+                        alert('Error deleting defect: ' + data.error);
+                    }
+                });
+            }
 
             function navigateGrid(direction) {
-                const maxPosition = 1000; // Assuming max coil length
+                const maxPosition = @Model.CoilData.Length;
 
                 switch(direction) {
                     case 'first':
@@ -721,7 +887,6 @@
                 legend.style.display = legend.style.display === 'none' ? 'block' : 'none';
             }
 
-            // Button event listeners
             document.getElementById('btnStart').addEventListener('click', function() {
                 started = true;
                 isSingleRow = true;
@@ -730,34 +895,34 @@
                 document.getElementById('btnMRow').classList.remove('active');
             });
 
-            document.getElementById('btnEnd').addEventListener('click', function() {
+            document.getElementById('btnEnd').addEventListener('click', end);
+
+            function end() {
                 clearSelection();
+                closePopup(false);
                 started = false;
                 isSingleRow = null;
                 isSelecting = false;
                 selectionStart = null;
                 selectionEnd = null;
+                selection = null;
                 document.getElementById('btnStart').classList.remove('active');
                 document.getElementById('btnSRow').classList.remove('active');
                 document.getElementById('btnMRow').classList.remove('active');
+            }
+
+            document.getElementById('btnDelete').addEventListener('click', function() {
+                if (confirm('Are you sure you want to clear all defects?')) {
+                    fetch('/Defect/ClearDefects', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                loadDefects();
+                                updateGridColors();
+                            }
+                        });
+                }
             });
-
-            // document.getElementById('btnView').addEventListener('click', function() {
-            //     alert('View functionality would be implemented here');
-            // });
-
-            // document.getElementById('btnDelete').addEventListener('click', function() {
-            //     if (confirm('Are you sure you want to clear all defects?')) {
-            //         fetch('/Defect/ClearDefects', { method: 'POST' })
-            //             .then(response => response.json())
-            //             .then(data => {
-            //                 if (data.success) {
-            //                     loadDefects();
-            //                     updateGridColors();
-            //                 }
-            //             });
-            //     }
-            // });
 
             document.getElementById('btnSRow').addEventListener('click', function() {
                 document.getElementById('btnMRow').classList.remove('active');
@@ -770,22 +935,5 @@
                 document.getElementById('btnSRow').classList.remove('active');
                 isSingleRow = false;
             });
-
-            // Search functionality
-            // document.getElementById('defectSearch').addEventListener('input', function() {
-            //     const searchTerm = this.value;
-
-            //     fetch('/Defect/Search', {
-            //         method: 'POST',
-            //         headers: {
-            //             'Content-Type': 'application/x-www-form-urlencoded',
-            //         },
-            //         body: `searchTerm=${encodeURIComponent(searchTerm)}`
-            //     })
-            //     .then(response => response.text())
-            //     .then(html => {
-            //         document.getElementById('defectRecordsList').innerHTML = html;
-            //     });
-            // });
         </script>
     }

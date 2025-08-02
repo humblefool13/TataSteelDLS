@@ -25,6 +25,9 @@ namespace DefectLoggingApp.Controllers
         [HttpPost]
         public IActionResult AddDefect([FromBody] CellSelection selection)
         {
+            if (selection == null)
+                return Json(new { success = false, error = "Body is empty" });
+
             try
             {
                 var defectType = GetDefectTypes().FirstOrDefault(d => d.Code == selection.DefectType);
@@ -39,7 +42,9 @@ namespace DefectLoggingApp.Controllers
                     TotalLength = selection.EndX - selection.StartX + 1,
                     Type = selection.DefectType,
                     DefectName = defectType?.Name ?? selection.DefectType,
-                    Severity = selection.Severity
+                    Severity = selection.Severity,
+                    Timestamp = selection.Timestamp,
+                    Remarks = selection.Remarks ?? string.Empty,
                 };
 
                 _defectRecords.Add(defect);
@@ -53,7 +58,7 @@ namespace DefectLoggingApp.Controllers
         }
 
         [HttpPost]
-        public IActionResult DeleteDefect(int id)
+        public IActionResult DeleteDefect([FromBody] int id)
         {
             var defect = _defectRecords.FirstOrDefault(d => d.Id == id);
             if (defect != null)
@@ -78,25 +83,26 @@ namespace DefectLoggingApp.Controllers
 
             // Calculate visible range based on position
             int startLength = position;
-            int endLength = Math.Min(position + 30, coilData.Length);
+            int endLength = Math.Min(position + (30*cellSize), coilData.Length);
 
-            for (int x = startLength; x < endLength; x++)
+
+            int cellHeight = (int)Math.Ceiling(coilData.Width / 5.0);
+
+            for (int x = startLength; x < endLength; x += cellSize)
             {
-                for (int y = 0; y <= coilData.Width; y += coilData.CellHeight)
+                for (int y = 0; y <= coilData.Width; y += cellHeight)
                 {
                     var cellDefects = _defectRecords.Where(d =>
                         d.StartLength <= x && d.EndLength >= x &&
-                        d.StartWidth <= y + coilData.CellHeight && d.EndWidth >= y).ToList();
+                        d.StartWidth < y && d.EndWidth >= y).ToList();
 
                     var color = GetCellColor(cellDefects);
 
                     cells.Add(new
                     {
-                        x = x,
-                        y = y,
-                        color = color,
-                        defectCount = cellDefects.Count,
-                        hasMultipleDefects = cellDefects.Count > 1
+                        x,
+                        y,
+                        color,
                     });
                 }
             }
@@ -137,22 +143,10 @@ namespace DefectLoggingApp.Controllers
                 new DefectType { Code = "SCAB-EMBED", Name = "Scab Embedded" },
                 new DefectType { Code = "DUSTPIT", Name = "Dust Pit" },
                 new DefectType { Code = "SCUMC-WHIT", Name = "Scum White" },
-                new DefectType { Code = "BROWN SHAD", Name = "Brown Shadow" },
+                new DefectType { Code = "BROWN-SHAD", Name = "Brown Shadow" },
                 new DefectType { Code = "SLIVER", Name = "Sliver" },
-                new DefectType { Code = "SLIVER IMP", Name = "Sliver Impression" }
+                new DefectType { Code = "SLIVER-IMP", Name = "Sliver Impression" }
             };
-        }
-
-        [HttpPost]
-        public IActionResult Search(string searchTerm)
-        {
-            var filteredDefects = string.IsNullOrEmpty(searchTerm)
-                ? _defectRecords.ToList()
-                : _defectRecords.Where(d =>
-                    d.DefectName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
-                    d.Type.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            return PartialView("_DefectList", filteredDefects);
         }
 
         [HttpPost]
