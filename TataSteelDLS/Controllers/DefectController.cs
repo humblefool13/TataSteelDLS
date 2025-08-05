@@ -116,22 +116,11 @@ namespace DefectLoggingApp.Controllers
 
             if (defects.Count == 1)
             {
-                // Single defect colors based on severity/type
-                return defects.First().Type switch
-                {
-                    "SCAB" => "#ff0000", // Red - Indicates Start of a Defect
-                    "SCAB-EMBED" => "#ffa500", // Orange - Indicates Start of More Than One Defect
-                    "DUSTPIT" => "#ffff00", // Yellow - Endpoint of Defect, Log Name Or Severity
-                    "SCUMC-WHIT" => "#90EE90", // Light Green - Cell Having Complete Information of Single Surface Defect
-                    "BROWN SHAD" => "#00ff00", // Green - Cell With Multiple Surface Defects, But Complete Information
-                    "SLIVER" => "#87CEEB", // Light Blue - Cell With Multiple Shape Defects, But Complete Information
-                    _ => "#00ff00"
-                };
+                return "#00ff00";
             }
             else
             {
-                // Multiple defects - blue for mixed defects
-                return "#0000ff"; // Blue - Cell Having Complete Information, But Mixed Defects
+                return "#38761d";
             }
         }
 
